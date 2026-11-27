@@ -127,3 +127,19 @@ msgstr "Confirmar"
 
 msgid "Forget"
 msgstr "Esquecer"
+
+# Settings page
+msgid "Settings"
+msgstr "Configurações"
+
+msgid "PREFERENCES"
+msgstr "PREFERÊNCIAS"
+
+msgid "Language"
+msgstr "Idioma"
+
+msgid "Automatic follows the Windows display language. The change applies right away."
+msgstr "Automático segue o idioma de exibição do Windows. A troca vale na hora."
+
+msgid "Automatic"
+msgstr "Automático"

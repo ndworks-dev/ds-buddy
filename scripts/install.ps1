@@ -12,8 +12,9 @@ A specific version, or uninstall:
     & ([scriptblock]::Create((irm https://github.com/__REPO__/releases/latest/download/install.ps1))) -Version 0.2.0
     & ([scriptblock]::Create((irm https://github.com/__REPO__/releases/latest/download/install.ps1))) -Uninstall
 
-The app installs for the current user and needs no administrator rights. It
-keeps no settings of its own; pairings live in Windows and stay on uninstall.
+The app installs for the current user and needs no administrator rights. Its
+settings live in HKCU\Software\DS Buddy and go away on uninstall; pairings
+live in Windows and stay.
 
 This script must keep working in Windows PowerShell 5.1, must never call `exit`
 (that would close the user's shell under `irm | iex`), and must verify checksums
@@ -92,6 +93,7 @@ try {
         Stop-App
         Remove-Item $shortcut -ErrorAction SilentlyContinue
         Remove-Item $InstallDir -Recurse -Force
+        Remove-Item 'HKCU:\Software\DS Buddy' -Recurse -ErrorAction SilentlyContinue
         Write-Step 'DS Buddy was removed. Your paired controllers stay paired in Windows.'
         return
     }

@@ -26,7 +26,8 @@ de Bluetooth do Windows e insiste até parear. O "DS" vale para os dois:
 **D**ual**S**hock e **D**ual**S**ense.
 
 **Alfa.** Windows 10 ou 11, x64. Não precisa de administrador. O app aparece em
-português quando o Windows está em português e em inglês nos demais idiomas.
+português quando o Windows está em português e em inglês nos demais idiomas; dá
+para fixar um dos dois em **Configurações**.
 
 ## Instalar
 
@@ -76,6 +77,12 @@ Lista os controles que o Windows conhece.
 
 Para reconectar um controle já pareado, basta apertar o botão PS.
 
+### Configurações
+
+**Idioma:** **Automático** segue o idioma de exibição do Windows (português
+quando ele está em português, inglês nos demais). **Português** e **English**
+fixam um dos dois. A troca vale na hora e fica salva.
+
 ## Como funciona
 
 A tela de Configurações do Windows desiste rápido. O DS Buddy:
@@ -99,8 +106,9 @@ ganhar atalho no menu Iniciar.
 ## Privacidade
 
 O DS Buddy não envia telemetria. O único acesso à rede é a checagem de
-atualização no GitHub, que não manda nenhum dado seu. Ele não guarda
-configurações próprias: os pareamentos ficam no Windows.
+atualização no GitHub, que não manda nenhum dado seu. A única configuração, o
+idioma, fica no registro do Windows em `HKCU\Software\DS Buddy`, e a
+desinstalação apaga essa chave. Os pareamentos ficam no Windows.
 
 ## Compilar
 
@@ -115,15 +123,17 @@ A interface usa renderização por software, então não precisa de GPU nem de
 WebView2. O ícone vem de `ui\icon.svg`: `scripts\make-icon.mjs` gera o
 `ui\icon.png` e o `icon.ico` a partir dele (veja o começo do script). Para tirar
 capturas de tela, `DS_BUDDY_PAGE=1` abre o app direto na aba Controles, e
-`DS_BUDDY_LANG=en` ou `DS_BUDDY_LANG=pt-BR` força um idioma.
+`DS_BUDDY_LANG=en` ou `DS_BUDDY_LANG=pt-BR` força um idioma naquela execução,
+sem mudar o que está salvo.
 
 ## Tradução
 
 O texto original da interface é em inglês. O português fica em
 `ui/translations/pt-BR/LC_MESSAGES/ds-buddy.po`, embutido no executável na
-compilação, e o Slint escolhe o idioma pelo locale do sistema. As mensagens
-montadas no Rust (status, atividade, erros) usam a macro `tr!` de `src/i18n.rs`,
-que decide do mesmo jeito. Todo `@tr` novo precisa de uma entrada no `.po`: o
+compilação. `src/i18n.rs` decide o idioma (a escolha em Configurações ou o
+locale do sistema), avisa o Slint e fornece a macro `tr!` para as mensagens
+montadas no Rust (status, atividade, erros), então a janela e as mensagens
+sempre concordam. Todo `@tr` novo precisa de uma entrada no `.po`: o
 `cargo test` falha se faltar alguma.
 
 ## Arquitetura
@@ -134,6 +144,7 @@ src/bt.rs        chamadas à API de Bluetooth do Windows
 src/pairing.rs   o fluxo de busca e pareamento, numa thread separada
 src/update.rs    a checagem de atualização e a chamada ao instalador
 src/i18n.rs      o idioma do app e a macro tr! para os textos do Rust
+src/settings.rs  as configurações, no registro do usuário
 ui/app.slint     a interface
 ui/widgets.slint componentes da interface
 ui/icon.svg      o ícone, de onde saem o icon.png e o icon.ico

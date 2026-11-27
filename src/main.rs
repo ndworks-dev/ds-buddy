@@ -7,9 +7,11 @@
 mod i18n;
 mod bt;
 mod pairing;
+mod settings;
 mod update;
 
 use std::{
+    cell::RefCell,
     rc::Rc,
     sync::{
         Arc,
@@ -34,10 +36,10 @@ const REFRESH_EVERY: Duration = Duration::from_secs(3);
 
 fn main() -> Result<(), slint::PlatformError> {
     let ui = AppWindow::new()?;
-    i18n::apply_override();
+    ui.set_language(i18n::init().index());
     ui.set_version(env!("CARGO_PKG_VERSION").into());
     ui.set_log(ModelRc::from(log_model()));
-    // Development aid for screenshots: open on a page (0 Pair, 1 Controllers).
+    // Development aid for screenshots: open on a page (0 Pair, 1 Controllers, 2 Settings).
     if let Some(page) = std::env::var("DS_BUDDY_PAGE").ok().and_then(|p| p.parse().ok()) {
         ui.set_page(page);
     }
@@ -69,13 +71,7 @@ fn main() -> Result<(), slint::PlatformError> {
             if let Some(ui) = weak.upgrade() {
                 ui.set_cancelling(true);
                 // Scans and pairing attempts can't be interrupted midway.
-                ui.set_detail(
-                    tr!(
-                        "Finishing the current step. This can take a few seconds…",
-                        "Terminando a etapa atual, isso pode levar alguns segundos…"
-                    )
-                    .into(),
-                );
+                ui.set_detail(cancelling_detail().into());
             }
         });
     }
@@ -99,6 +95,22 @@ fn main() -> Result<(), slint::PlatformError> {
         ui.on_refresh(move || {
             if let Some(ui) = weak.upgrade() {
                 refresh(&ui);
+            }
+        });
+    }
+
+    {
+        let weak = ui.as_weak();
+        ui.on_set_language(move |index| {
+            i18n::set(i18n::Language::from_index(index));
+            if let Some(ui) = weak.upgrade() {
+                ui.set_language(index);
+                // Slint redraws its own text; the status card is built here.
+                let stage = STAGE.with(|s| s.borrow().clone());
+                show_stage(&ui, stage.as_ref());
+                if ui.get_cancelling() {
+                    ui.set_detail(cancelling_detail().into());
+                }
             }
         });
     }
@@ -237,6 +249,7 @@ fn apply(ui: &AppWindow, event: Event) {
 
 /// Fills the headline card. `None` is the idle state before the first run.
 fn show_stage(ui: &AppWindow, stage: Option<&Stage>) {
+    STAGE.with(|s| *s.borrow_mut() = stage.cloned());
     let (phase, headline, detail): (i32, String, String) = match stage {
         None => (
             0,
@@ -316,6 +329,12 @@ fn refresh(ui: &AppWindow) {
 thread_local! {
     /// The activity log, shared with the window; lives on the UI thread.
     static LOG: Rc<VecModel<LogLine>> = Rc::new(VecModel::default());
+    /// The stage on the status card, to redraw it when the language changes.
+    static STAGE: RefCell<Option<Stage>> = const { RefCell::new(None) };
+}
+
+fn cancelling_detail() -> String {
+    tr!("Finishing the current step. This can take a few seconds…", "Terminando a etapa atual, isso pode levar alguns segundos…")
 }
 
 fn log_model() -> Rc<VecModel<LogLine>> {
