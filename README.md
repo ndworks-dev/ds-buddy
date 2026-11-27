@@ -13,6 +13,10 @@ Com alguns adaptadores, o controle em modo de pareamento nunca aparece na tela *
 
 Não precisa de administrador.
 
+## Baixar
+
+Baixe o `DS-Buddy-X.Y.Z-windows-x64.zip` da [última release](https://github.com/ndworks-dev/ds-buddy/releases/latest), extraia e rode o `ds-buddy.exe`. Não precisa instalar.
+
 ## Uso
 
 **Parear:** coloque o controle em modo de pareamento e clique em **Procurar e parear**. Para isso, segure **Create** (DualSense) ou **Share** (DualShock 4) junto com **PS** até a luz piscar duas vezes seguidas, várias vezes. Se o Windows mostrar uma janela ou notificação pedindo confirmação, aceite. O quadro **Atividade** mostra cada busca e cada tentativa.
@@ -37,6 +41,24 @@ O executável fica em `target\release\ds-buddy.exe`. A interface é em [Slint](h
 - `scripts\make-icon.ps1`: gera `ui\icon.png` e `icon.ico`.
 
 Para tirar capturas de tela, `DS_BUDDY_PAGE=1` abre o app direto na aba Controles.
+
+## Releases
+
+O `.github/workflows/release.yml` compila, roda o lint e os testes em todo push e pull request. Quando um push no `main` tem commits que justificam uma release, ele cria a tag `vX.Y.Z` e publica uma release no GitHub com:
+
+- `DS-Buddy-X.Y.Z-windows-x64.zip`: o `ds-buddy.exe` e os textos das licenças
+- `SHA256SUMS.txt`
+
+A versão vem dos [Conventional Commits](https://www.conventionalcommits.org/) desde a última tag (`scripts/release-version.sh`):
+
+| Commits desde a última release | Próxima versão |
+|---|---|
+| uma mudança incompatível (`feat!:` ou rodapé `BREAKING CHANGE:`) | major; minor enquanto abaixo de 1.0 |
+| pelo menos um `feat` | minor |
+| `fix` ou `perf` | patch |
+| só `docs`, `chore`, `ci`, `refactor`, `test`, `build` | sem release |
+
+A primeira release usa a versão do `Cargo.toml`. Para pular para uma versão específica, aumente a versão no `Cargo.toml`, porque uma versão manual maior sempre vence. O CI grava a versão da release no executável, e o `Cargo.toml` em si não muda com as releases. Não crie tags `v*` nem releases à mão.
 
 ## Licença
 
