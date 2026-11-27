@@ -14,7 +14,7 @@
 **Encontra e pareia controles DualShock 4 e DualSense por Bluetooth. Feito em
 Rust e Slint.**
 
-[Instalar](#instalar) · [Uso](#uso) · [Compilar](#compilar) ·
+[Instalar](#instalar) · [Uso](#uso) · [Atualizações](#atualizações) · [Compilar](#compilar) ·
 [Releases](https://github.com/ndworks-dev/ds-buddy/releases) · [Apoie](#apoie)
 
 </div>
@@ -86,9 +86,19 @@ A tela de Configurações do Windows desiste rápido. O DS Buddy:
 3. Se falhar, tenta de novo a cada 3 s, por até 10 minutos.
 4. No sucesso, ativa o serviço HID do controle.
 
+## Atualizações
+
+Ao abrir, o app pergunta ao GitHub qual é a última release. Se houver uma
+versão mais nova, ele mostra um aviso com **Atualizar** e **Agora não**. Em
+**Atualizar**, o app fecha e o `install.ps1` daquela versão abre numa janela do
+PowerShell: ele confere o SHA-256, troca o executável na mesma pasta e abre o
+app de novo. Uma cópia rodando a partir do zip é atualizada onde está, sem
+ganhar atalho no menu Iniciar.
+
 ## Privacidade
 
-O DS Buddy não envia telemetria nem acessa a rede. Ele não guarda
+O DS Buddy não envia telemetria. O único acesso à rede é a checagem de
+atualização no GitHub, que não manda nenhum dado seu. Ele não guarda
 configurações próprias: os pareamentos ficam no Windows.
 
 ## Compilar
@@ -111,6 +121,7 @@ capturas de tela, `DS_BUDDY_PAGE=1` abre o app direto na aba Controles.
 src/main.rs      ponto de entrada e ligação com a interface
 src/bt.rs        chamadas à API de Bluetooth do Windows
 src/pairing.rs   o fluxo de busca e pareamento, numa thread separada
+src/update.rs    a checagem de atualização e a chamada ao instalador
 ui/app.slint     a interface
 ui/widgets.slint componentes da interface
 ui/icon.svg      o ícone, de onde saem o icon.png e o icon.ico

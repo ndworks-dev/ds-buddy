@@ -168,6 +168,11 @@ export component AppWindow inherits Window {
     // Address waiting for a second click on "Esquecer".
     property <string> confirm-forget;
 
+    // A newer release to offer, or empty.
+    in property <string> update-version;
+    callback install-update();
+    callback dismiss-update();
+
     HorizontalLayout {
         // ---------------------------------------------------------------- sidebar
         Rectangle {
@@ -237,6 +242,39 @@ export component AppWindow inherits Window {
                     padding-bottom: 40px;
                     spacing: 22px;
                     alignment: start;
+
+                    if root.update-version != "": Rectangle {
+                        border-radius: 14px;
+                        background: Theme.accent-bg;
+                        border-width: 1px;
+                        border-color: Theme.accent-border;
+                        HorizontalLayout {
+                            padding: 16px;
+                            padding-left: 20px;
+                            spacing: 16px;
+                            VerticalLayout {
+                                alignment: center;
+                                spacing: 4px;
+                                horizontal-stretch: 1;
+                                Text { text: "DS Buddy " + root.update-version + " disponível"; color: Theme.text; font-weight: 600; }
+                                Text {
+                                    text: root.busy ? "Termine o pareamento para atualizar."
+                                        : "Você está na versão " + root.version + ". O app fecha, a nova versão é baixada do GitHub e ele abre de novo.";
+                                    color: Theme.text2;
+                                    font-size: 13px;
+                                    wrap: word-wrap;
+                                }
+                            }
+                            VerticalLayout {
+                                alignment: center;
+                                Button { text: "Agora não"; height-hint: 36px; clicked => { root.dismiss-update(); } }
+                            }
+                            if !root.busy: VerticalLayout {
+                                alignment: center;
+                                Button { text: "Atualizar"; primary: true; height-hint: 36px; clicked => { root.install-update(); } }
+                            }
+                        }
+                    }
 
                     // ======================================================= Pair
                     if root.page == 0: VerticalLayout {

@@ -5,6 +5,7 @@
 
 mod bt;
 mod pairing;
+mod update;
 
 use std::{
     rc::Rc,
@@ -93,6 +94,29 @@ fn main() -> Result<(), slint::PlatformError> {
         });
     }
 
+    check_for_update(&ui);
+    {
+        let weak = ui.as_weak();
+        ui.on_install_update(move || {
+            let Some(ui) = weak.upgrade() else { return };
+            match update::start(&ui.get_update_version()) {
+                // The installer replaces this executable, so get out of its way.
+                Ok(()) => {
+                    let _ = slint::quit_event_loop();
+                }
+                Err(e) => toast(&weak, format!("Não deu para iniciar a atualização: {e}")),
+            }
+        });
+    }
+    {
+        let weak = ui.as_weak();
+        ui.on_dismiss_update(move || {
+            if let Some(ui) = weak.upgrade() {
+                ui.set_update_version("".into());
+            }
+        });
+    }
+
     let poll = slint::Timer::default();
     {
         let weak = ui.as_weak();
@@ -120,6 +144,23 @@ fn main() -> Result<(), slint::PlatformError> {
     }
 
     ui.run()
+}
+
+/// Asks GitHub for the latest release in the background and offers it when
+/// it is newer. Offline or on any error there is simply no offer.
+fn check_for_update(ui: &AppWindow) {
+    let weak = ui.as_weak();
+    thread::spawn(move || {
+        let Ok(latest) = update::latest_version() else { return };
+        if !update::is_newer(&latest, env!("CARGO_PKG_VERSION")) {
+            return;
+        }
+        let _ = slint::invoke_from_event_loop(move || {
+            if let Some(ui) = weak.upgrade() {
+                ui.set_update_version(latest.into());
+            }
+        });
+    });
 }
 
 /// Starts the pairing flow on a worker thread; its events are applied on the UI thread.
