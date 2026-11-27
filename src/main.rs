@@ -1,4 +1,4 @@
-//! ds-buddy: finds and pairs DualShock 4 / DualSense controllers over
+//! DS Buddy: finds and pairs DualShock 4 / DualSense controllers over
 //! Bluetooth on Windows, insisting until stubborn dongles get it right.
 //! A native Slint window, software-rendered so it needs no GPU driver.
 #![windows_subsystem = "windows"]

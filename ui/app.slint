@@ -1,4 +1,4 @@
-// The ds-buddy window: a Pair page (home) and a Controllers page behind a
+// The DS Buddy window: a Pair page (home) and a Controllers page behind a
 // sidebar. All state comes from the Rust side.
 
 import { ScrollView } from "std-widgets.slint";
@@ -129,7 +129,7 @@ component Step inherits HorizontalLayout {
 }
 
 export component AppWindow inherits Window {
-    title: "ds-buddy";
+    title: "DS Buddy";
     icon: @image-url("icon.png");
     preferred-width: 1000px;
     preferred-height: 700px;
@@ -188,7 +188,7 @@ export component AppWindow inherits Window {
                     spacing: 10px;
                     alignment: start;
                     Image { source: @image-url("icon.png"); width: 28px; height: 28px; }
-                    Text { text: "ds-buddy"; vertical-alignment: center; color: Theme.text; font-size: 16px; font-weight: 600; }
+                    Text { text: "DS Buddy"; vertical-alignment: center; color: Theme.text; font-size: 16px; font-weight: 600; }
                 }
                 VerticalLayout {
                     spacing: 4px;

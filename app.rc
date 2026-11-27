@@ -1,1 +1,24 @@
 1 ICON "icon.ico"
+
+// Task Manager and the taskbar show FileDescription; without it they fall
+// back to the file name, "ds-buddy.exe".
+1 VERSIONINFO
+FILEVERSION 0,1,0,0
+PRODUCTVERSION 0,1,0,0
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "040904B0"
+        BEGIN
+            VALUE "FileDescription", "DS Buddy"
+            VALUE "ProductName", "DS Buddy"
+            VALUE "FileVersion", "0.1.0"
+            VALUE "ProductVersion", "0.1.0"
+            VALUE "OriginalFilename", "ds-buddy.exe"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x409, 1200
+    END
+END
