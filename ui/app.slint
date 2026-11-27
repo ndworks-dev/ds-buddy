@@ -1,0 +1,431 @@
+// The ds-buddy window: a Pair page (home) and a Controllers page behind a
+// sidebar. All state comes from the Rust side.
+
+import { ScrollView } from "std-widgets.slint";
+import { Theme, Icon, Card, Label, Heading, Button, Pill } from "widgets.slint";
+
+export struct LogLine {
+    time: string,
+    text: string,
+    // 0 info, 1 good, 2 warning.
+    kind: int,
+}
+
+export struct ControllerRow {
+    address: string,
+    name: string,
+    connected: bool,
+    paired: bool,
+}
+
+component NavItem inherits Rectangle {
+    in property <string> label;
+    in property <string> icon;
+    in property <bool> active;
+    callback clicked;
+    accessible-role: button;
+    accessible-label: label;
+    accessible-action-default => { clicked(); }
+    min-height: 44px;
+    border-radius: 10px;
+    background: active ? Theme.accent-bg : touch.has-hover ? #181B20 : transparent;
+    HorizontalLayout {
+        padding-left: 12px;
+        padding-right: 12px;
+        spacing: 12px;
+        VerticalLayout {
+            alignment: center;
+            Icon { name: root.icon; tint: root.active ? Theme.accent : Theme.text2; }
+        }
+        Text {
+            text: root.label;
+            vertical-alignment: center;
+            color: root.active ? Theme.text : Theme.text2;
+            font-weight: root.active ? 500 : 400;
+        }
+    }
+    touch := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}
+
+component PageHeader inherits VerticalLayout {
+    in property <string> eyebrow;
+    in property <string> title;
+    spacing: 4px;
+    Text { text: root.eyebrow; color: Theme.muted; font-size: 12px; letter-spacing: 1px; }
+    Text { text: root.title; color: Theme.text; font-size: 28px; font-weight: 600; }
+}
+
+// The controller's touchpad and light bars. They pulse slowly while
+// searching and fast while pairing, like the real thing.
+component ControllerLights inherits Rectangle {
+    in property <int> phase;
+    property <float> pulse: phase == 1 ? (Math.sin(animation-tick() / 1100ms * 360deg) + 1) / 2
+        : phase == 2 ? (Math.sin(animation-tick() / 380ms * 360deg) + 1) / 2
+        : 1;
+    property <color> light: phase == 3 ? Theme.accent : phase >= 4 ? Theme.warn : phase == 0 ? Theme.line3 : Theme.blue;
+    width: 220px;
+    height: 150px;
+    border-radius: 14px;
+    background: Theme.well;
+    border-width: 1px;
+    border-color: Theme.line;
+    Rectangle {
+        x: 36px;
+        y: 28px;
+        width: 10px;
+        height: 94px;
+        border-radius: 5px;
+        background: root.light;
+        opacity: 0.25 + 0.75 * root.pulse;
+    }
+    Rectangle {
+        x: 58px;
+        y: 30px;
+        width: 104px;
+        height: 72px;
+        border-radius: 12px;
+        background: #1B1F25;
+        border-width: 1px;
+        border-color: Theme.line2;
+    }
+    Rectangle {
+        x: 174px;
+        y: 28px;
+        width: 10px;
+        height: 94px;
+        border-radius: 5px;
+        background: root.light;
+        opacity: 0.25 + 0.75 * root.pulse;
+    }
+    // PS button.
+    Rectangle {
+        x: (parent.width - 14px) / 2;
+        y: 114px;
+        width: 14px;
+        height: 14px;
+        border-radius: 7px;
+        background: root.phase == 0 ? Theme.line2 : root.light;
+        opacity: root.phase == 0 ? 1 : 0.4 + 0.6 * root.pulse;
+    }
+}
+
+component Step inherits HorizontalLayout {
+    in property <string> number;
+    in property <string> text;
+    spacing: 12px;
+    Rectangle {
+        width: 26px;
+        height: 26px;
+        border-radius: 13px;
+        background: Theme.accent-bg;
+        border-width: 1px;
+        border-color: Theme.accent-border;
+        Text { text: root.number; color: Theme.accent; font-size: 12px; font-weight: 600; }
+    }
+    Text { text: root.text; color: Theme.text2; vertical-alignment: center; wrap: word-wrap; horizontal-stretch: 1; }
+}
+
+export component AppWindow inherits Window {
+    title: "ds-buddy";
+    icon: @image-url("icon.png");
+    preferred-width: 1000px;
+    preferred-height: 700px;
+    min-width: 860px;
+    min-height: 600px;
+    background: Theme.bg;
+    default-font-family: "IBM Plex Sans";
+    default-font-size: 14px;
+
+    // 0 Pair, 1 Controllers.
+    in-out property <int> page: 0;
+
+    in property <bool> adapter-ok: true;
+    in property <string> toast;
+    in property <string> version;
+    // See the overlay at the end of this component.
+    in property <bool> repaint;
+
+    // Pair: 0 idle, 1 searching, 2 pairing, 3 paired, 4 timed out,
+    // 5 cancelled, 6 failed.
+    in property <int> phase;
+    in property <string> headline;
+    in property <string> detail;
+    in property <bool> busy;
+    in property <bool> cancelling;
+    in property <[LogLine]> log;
+    // Not "start": that name would shadow `alignment: start`.
+    callback start-pairing();
+    callback cancel();
+
+    // Controllers
+    in property <[ControllerRow]> controllers;
+    callback repair(string);
+    callback forget(string);
+    callback refresh();
+    // Address waiting for a second click on "Esquecer".
+    property <string> confirm-forget;
+
+    HorizontalLayout {
+        // ---------------------------------------------------------------- sidebar
+        Rectangle {
+            width: 232px;
+            background: Theme.sidebar;
+            Rectangle {
+                x: parent.width - 1px;
+                width: 1px;
+                background: Theme.line;
+            }
+            VerticalLayout {
+                padding: 24px;
+                padding-left: 16px;
+                padding-right: 16px;
+                spacing: 28px;
+                HorizontalLayout {
+                    padding-left: 8px;
+                    spacing: 10px;
+                    alignment: start;
+                    Image { source: @image-url("icon.png"); width: 28px; height: 28px; }
+                    Text { text: "ds-buddy"; vertical-alignment: center; color: Theme.text; font-size: 16px; font-weight: 600; }
+                }
+                VerticalLayout {
+                    spacing: 4px;
+                    NavItem { label: "Parear"; icon: "pair"; active: root.page == 0; clicked => { root.page = 0; } }
+                    NavItem { label: "Controles"; icon: "controllers"; active: root.page == 1; clicked => { root.page = 1; root.refresh(); } }
+                }
+                Rectangle { vertical-stretch: 1; }
+                Rectangle {
+                    border-radius: 12px;
+                    background: Theme.panel;
+                    border-width: 1px;
+                    border-color: Theme.line;
+                    VerticalLayout {
+                        padding: 14px;
+                        spacing: 6px;
+                        HorizontalLayout {
+                            spacing: 8px;
+                            alignment: start;
+                            VerticalLayout {
+                                alignment: center;
+                                Rectangle { width: 8px; height: 8px; border-radius: 4px; background: root.adapter-ok ? Theme.accent : Theme.warn; }
+                            }
+                            Text { text: root.adapter-ok ? "Bluetooth pronto" : "Sem Bluetooth"; color: Theme.text; font-weight: 500; }
+                        }
+                        Label {
+                            text: !root.adapter-ok ? "Conecte o adaptador e ligue o Bluetooth."
+                                : root.controllers.length == 1 ? "1 controle neste PC"
+                                : root.controllers.length + " controles neste PC";
+                            wrap: word-wrap;
+                        }
+                        if root.version != "": Label { text: "Versão " + root.version; }
+                    }
+                }
+            }
+        }
+
+        // ---------------------------------------------------------------- content
+        Rectangle {
+            horizontal-stretch: 1;
+
+            ScrollView {
+                VerticalLayout {
+                    padding: 28px;
+                    padding-left: 32px;
+                    padding-right: 32px;
+                    padding-bottom: 40px;
+                    spacing: 22px;
+                    alignment: start;
+
+                    // ======================================================= Pair
+                    if root.page == 0: VerticalLayout {
+                        spacing: 22px;
+                        PageHeader { eyebrow: "BLUETOOTH"; title: "Parear controle"; }
+
+                        Card {
+                            HorizontalLayout {
+                                padding: 24px;
+                                spacing: 28px;
+                                VerticalLayout {
+                                    alignment: center;
+                                    ControllerLights { phase: root.phase; }
+                                }
+                                VerticalLayout {
+                                    alignment: center;
+                                    spacing: 10px;
+                                    horizontal-stretch: 1;
+                                    Text { text: root.headline; color: Theme.text; font-size: 22px; font-weight: 600; wrap: word-wrap; }
+                                    Text { text: root.detail; color: Theme.muted; wrap: word-wrap; }
+                                    Rectangle { height: 6px; }
+                                    HorizontalLayout {
+                                        alignment: start;
+                                        spacing: 10px;
+                                        if !root.busy: Button {
+                                            text: root.phase == 0 ? "Procurar e parear" : "Procurar de novo";
+                                            primary: true;
+                                            clicked => { root.start-pairing(); }
+                                        }
+                                        if root.busy: Button {
+                                            text: root.cancelling ? "Cancelando…" : "Cancelar";
+                                            clicked => { if (!root.cancelling) { root.cancel(); } }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        if !root.busy && root.phase != 3: Card {
+                            VerticalLayout {
+                                padding: 20px;
+                                spacing: 14px;
+                                Heading { text: "Como colocar em modo de pareamento"; }
+                                Step { number: "1"; text: "Com o controle desligado, segure Create (DualSense) ou Share (DualShock 4) junto com o botão PS."; }
+                                Step { number: "2"; text: "Solte quando a luz piscar rápido, duas vezes seguidas, várias vezes. Se ela pulsar devagar, não é o modo certo."; }
+                                Step { number: "3"; text: "Clique em Procurar e parear. Se o Windows pedir confirmação, aceite."; }
+                                Label {
+                                    text: "O modo de pareamento desliga sozinho depois de um ou dois minutos. Se a luz parar, segure PS por 10 segundos para desligar e repita.";
+                                    wrap: word-wrap;
+                                }
+                            }
+                        }
+
+                        if root.log.length > 0: Card {
+                            VerticalLayout {
+                                padding: 20px;
+                                spacing: 12px;
+                                Heading { text: "Atividade"; }
+                                Rectangle {
+                                    border-radius: 10px;
+                                    background: Theme.well;
+                                    border-width: 1px;
+                                    border-color: Theme.line;
+                                    VerticalLayout {
+                                        padding: 14px;
+                                        spacing: 6px;
+                                        for line in root.log: HorizontalLayout {
+                                            spacing: 12px;
+                                            Text { text: line.time; color: Theme.line3; font-family: Theme.mono; font-size: 12px; vertical-alignment: top; }
+                                            Text {
+                                                text: line.text;
+                                                color: line.kind == 1 ? Theme.accent : line.kind == 2 ? Theme.warn : Theme.text2;
+                                                font-size: 13px;
+                                                wrap: word-wrap;
+                                                horizontal-stretch: 1;
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // ======================================================= Controllers
+                    if root.page == 1: VerticalLayout {
+                        spacing: 22px;
+                        HorizontalLayout {
+                            spacing: 16px;
+                            PageHeader { eyebrow: "DISPOSITIVOS"; title: "Controles"; }
+                            Rectangle { horizontal-stretch: 1; }
+                            VerticalLayout {
+                                alignment: end;
+                                Button { text: "Atualizar"; height-hint: 36px; clicked => { root.refresh(); } }
+                            }
+                        }
+                        Card {
+                            VerticalLayout {
+                                padding: 20px;
+                                spacing: 6px;
+                                Heading { text: "Controles PlayStation neste PC"; }
+                                Text {
+                                    text: "Para conectar um controle pareado, é só apertar o botão PS. Se ele não conecta mais, por exemplo depois de usar no PS5, coloque-o em modo de pareamento e clique em Reparear.";
+                                    color: Theme.muted;
+                                    font-size: 13px;
+                                    wrap: word-wrap;
+                                }
+                                Rectangle { height: 8px; }
+                                if root.controllers.length == 0: Rectangle {
+                                    min-height: 64px;
+                                    Rectangle { y: 0; height: 1px; background: #1F2329; }
+                                    HorizontalLayout {
+                                        Text { text: "Nenhum controle pareado ainda."; color: Theme.text2; vertical-alignment: center; }
+                                    }
+                                }
+                                for c in root.controllers: Rectangle {
+                                    min-height: 68px;
+                                    Rectangle { y: 0; height: 1px; background: #1F2329; }
+                                    HorizontalLayout {
+                                        spacing: 16px;
+                                        VerticalLayout {
+                                            alignment: center;
+                                            horizontal-stretch: 1;
+                                            spacing: 2px;
+                                            Text { text: c.name; color: Theme.text; font-weight: 500; }
+                                            Text { text: c.address; color: Theme.muted; font-family: Theme.mono; font-size: 12px; }
+                                        }
+                                        VerticalLayout {
+                                            alignment: center;
+                                            Pill {
+                                                text: c.connected ? "Conectado" : c.paired ? "Pareado" : "Incompleto";
+                                                tint: c.connected ? Theme.accent : c.paired ? Theme.text2 : Theme.warn;
+                                                filled: c.connected;
+                                            }
+                                        }
+                                        VerticalLayout {
+                                            alignment: center;
+                                            Button {
+                                                width: 120px;
+                                                text: "Reparear";
+                                                height-hint: 36px;
+                                                clicked => { root.confirm-forget = ""; root.page = 0; root.repair(c.address); }
+                                            }
+                                        }
+                                        VerticalLayout {
+                                            alignment: center;
+                                            Button {
+                                                width: 120px;
+                                                text: root.confirm-forget == c.address ? "Confirmar" : "Esquecer";
+                                                danger: true;
+                                                height-hint: 36px;
+                                                clicked => {
+                                                    if (root.confirm-forget == c.address) {
+                                                        root.confirm-forget = "";
+                                                        root.forget(c.address);
+                                                    } else {
+                                                        root.confirm-forget = c.address;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if root.toast != "": Rectangle {
+                x: (parent.width - self.width) / 2;
+                y: parent.height - self.height - 20px;
+                width: toast-text.preferred-width + 28px;
+                height: 36px;
+                border-radius: 8px;
+                background: Theme.text;
+                toast-text := Text { text: root.toast; color: Theme.bg; }
+            }
+        }
+    }
+
+    // The software renderer only redraws what changed, but Windows drops the
+    // window's pixels while it's minimized, so a restore can leave stale or
+    // blank areas. Both colors are fully transparent; flipping between them
+    // marks the whole window dirty without drawing anything.
+    Rectangle {
+        x: 0;
+        y: 0;
+        width: root.width;
+        height: root.height;
+        background: root.repaint ? #01000000 : #00000000;
+    }
+}

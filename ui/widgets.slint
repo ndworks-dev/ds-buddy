@@ -1,0 +1,113 @@
+// Theme and building blocks, shared look with the OpenChroma app: graphite
+// ground, one mint accent, and the controller's blue light as the only other
+// color.
+
+import "fonts/IBMPlexSans-Regular.ttf";
+import "fonts/IBMPlexSans-Medium.ttf";
+import "fonts/IBMPlexSans-SemiBold.ttf";
+import "fonts/IBMPlexMono-Regular.ttf";
+
+export global Theme {
+    out property <color> bg: #0E1013;
+    out property <color> sidebar: #121418;
+    out property <color> panel: #16191E;
+    out property <color> well: #0B0D10;
+    out property <color> line: #23272E;
+    out property <color> line2: #2C313A;
+    out property <color> line3: #3A404A;
+    out property <color> text: #E8EAED;
+    out property <color> text2: #B4BAC4;
+    out property <color> muted: #9AA1AC;
+    out property <color> accent: #5EE6A8;
+    out property <color> accent-bg: #1D2A25;
+    out property <color> accent-border: #3E8F6B;
+    out property <color> blue: #4DA3FF;
+    out property <color> warn: #F2B04A;
+    out property <color> danger: #FF9C85;
+    out property <color> danger-line: #5A2A22;
+    out property <string> mono: "IBM Plex Mono";
+}
+
+// Stroke icons on a 24×24 grid.
+export component Icon inherits Path {
+    in property <string> name;
+    in property <color> tint: Theme.text2;
+    width: 18px;
+    height: 18px;
+    viewbox-width: 24;
+    viewbox-height: 24;
+    fill: transparent;
+    stroke: tint;
+    stroke-width: 2px;
+    commands: name == "pair" ? "M 7 7 L 17 17 L 12 22 L 12 2 L 17 7 L 7 17"
+        : name == "controllers" ? "M 7 7 L 17 7 A 5 5 0 0 1 17 18 L 7 18 A 5 5 0 0 1 7 7 Z M 7 11 L 7 14 M 5.5 12.5 L 8.5 12.5 M 16 12 L 16.5 12 M 18 14 L 18.5 14"
+        : "";
+}
+
+export component Card inherits Rectangle {
+    background: Theme.panel;
+    border-radius: 14px;
+    border-width: 1px;
+    border-color: Theme.line;
+}
+
+export component Label inherits Text {
+    color: Theme.muted;
+    font-size: 12px;
+}
+
+export component Heading inherits Text {
+    color: Theme.text;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+export component Button inherits Rectangle {
+    in property <string> text;
+    in property <bool> primary;
+    in property <bool> danger;
+    in property <length> height-hint: 44px;
+    callback clicked;
+    accessible-role: button;
+    accessible-label: text;
+    accessible-action-default => { clicked(); }
+    min-height: height-hint;
+    border-radius: 10px;
+    border-width: primary ? 0 : 1px;
+    border-color: danger ? Theme.danger-line : Theme.line2;
+    background: primary ? (touch.has-hover ? #7DEDBB : Theme.accent) : (touch.has-hover ? #1C2026 : Theme.panel);
+    HorizontalLayout {
+        padding-left: 16px;
+        padding-right: 16px;
+        alignment: center;
+        Text {
+            text: root.text;
+            vertical-alignment: center;
+            color: root.primary ? Theme.bg : root.danger ? Theme.danger : Theme.text;
+            font-weight: root.primary ? 600 : 400;
+        }
+    }
+    touch := TouchArea {
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+}
+
+// Small rounded tag, e.g. "Conectado".
+export component Pill inherits Rectangle {
+    in property <string> text;
+    in property <color> tint: Theme.text2;
+    in property <bool> filled;
+    height: 24px;
+    width: pill-text.preferred-width + 20px;
+    border-radius: 12px;
+    border-width: 1px;
+    border-color: filled ? Theme.accent-border : Theme.line2;
+    background: filled ? Theme.accent-bg : transparent;
+    pill-text := Text {
+        text: root.text;
+        color: root.tint;
+        font-size: 12px;
+        font-weight: 500;
+    }
+}

@@ -1,0 +1,15 @@
+[package]
+name = "ds-buddy"
+version = "0.1.0"
+edition = "2024"
+# Slint is used under the GPLv3, which makes this binary GPL-3.0.
+license = "GPL-3.0-or-later"
+description = "Finds and pairs DualShock 4 / DualSense controllers over Bluetooth on Windows"
+
+[dependencies]
+slint = { version = "1.18", default-features = false, features = ["std", "backend-winit", "renderer-software", "accessibility", "compat-1-2"] }
+windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Devices_Bluetooth", "Win32_System_SystemInformation"] }
+
+[build-dependencies]
+slint-build = "1.18"
+embed-resource = "3"
