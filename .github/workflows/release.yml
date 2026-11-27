@@ -1,0 +1,94 @@
+# Build and test every push and pull request. Pushes to main that contain
+# releasable Conventional Commits (feat, fix, perf, breaking) also get a
+# version tag and a GitHub release with the Windows package.
+name: Build and release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  # One release at a time; never cancel a run that may be publishing.
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0 # tags and history for the version bump
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: clippy, rustfmt
+
+      - uses: Swatinem/rust-cache@v2
+
+      - name: Decide version
+        id: version
+        shell: bash
+        run: |
+          bash scripts/release-version.sh notes.md | tee -a "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" != "push" ]; then echo "release=false" >> "$GITHUB_OUTPUT"; fi
+
+      - name: Stamp version
+        if: steps.version.outputs.version != ''
+        shell: bash
+        run: sed -i '0,/^version = ".*"/s//version = "${{ steps.version.outputs.version }}"/' Cargo.toml
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Lint
+        run: cargo clippy --all-targets -- -D warnings
+
+      - name: Test
+        run: cargo test
+
+      - name: Build
+        run: cargo build --release
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $version = '${{ steps.version.outputs.version }}'
+          if (-not $version) { $version = 'dev' }
+          New-Item -ItemType Directory dist, out | Out-Null
+          Copy-Item target/release/ds-buddy.exe dist/
+          # The licenses' warranty disclaimers have to travel with the binary.
+          Copy-Item LICENSE dist/LICENSE.txt
+          Copy-Item ui/fonts/LICENSE.txt dist/LICENSE-fonts.txt
+          Compress-Archive -Path dist/* -DestinationPath "out/DS-Buddy-$version-windows-x64.zip"
+          Get-ChildItem out | Get-FileHash -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash.ToLower())  $(Split-Path $_.Path -Leaf)" } |
+            Set-Content out/SHA256SUMS.txt -Encoding ascii
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: DS-Buddy-windows-x64
+          path: out/*
+
+      - name: Publish release
+        if: steps.version.outputs.release == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          {
+            echo "Download \`DS-Buddy-$VERSION-windows-x64.zip\`, extract it and run \`ds-buddy.exe\`. No installation or administrator rights needed."
+            echo
+            cat notes.md
+          } > release-notes.md
+          gh release create "v$VERSION" out/* \
+            --target "$GITHUB_SHA" \
+            --title "DS Buddy v$VERSION" \
+            --notes-file release-notes.md
