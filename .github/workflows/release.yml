@@ -67,6 +67,9 @@ jobs:
           Copy-Item LICENSE dist/LICENSE.txt
           Copy-Item ui/fonts/LICENSE.txt dist/LICENSE-fonts.txt
           Compress-Archive -Path dist/* -DestinationPath "out/DS-Buddy-$version-windows-x64.zip"
+          # The installer learns which repository to download from here.
+          (Get-Content scripts/install.ps1 -Raw).Replace('__REPO__', '${{ github.repository }}') |
+            Set-Content out/install.ps1 -Encoding utf8 -NoNewline
           Get-ChildItem out | Get-FileHash -Algorithm SHA256 |
             ForEach-Object { "$($_.Hash.ToLower())  $(Split-Path $_.Path -Leaf)" } |
             Set-Content out/SHA256SUMS.txt -Encoding ascii
@@ -84,7 +87,13 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           {
-            echo "Download \`DS-Buddy-$VERSION-windows-x64.zip\`, extract it and run \`ds-buddy.exe\`. No installation or administrator rights needed."
+            echo "Install or update from PowerShell, no administrator rights needed:"
+            echo
+            echo '```powershell'
+            echo "irm https://github.com/${{ github.repository }}/releases/latest/download/install.ps1 | iex"
+            echo '```'
+            echo
+            echo "Or download \`DS-Buddy-$VERSION-windows-x64.zip\`, extract it and run \`ds-buddy.exe\`."
             echo
             cat notes.md
           } > release-notes.md
