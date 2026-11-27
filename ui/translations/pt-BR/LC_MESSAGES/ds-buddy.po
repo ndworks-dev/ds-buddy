@@ -1,0 +1,129 @@
+# Brazilian Portuguese for the DS Buddy window. The text built in Rust is
+# translated in the code, with the tr! macro (src/i18n.rs).
+#
+# Every @tr in ui/*.slint needs an entry here, with msgid exactly as written
+# there. A missing entry shows the English text.
+msgid ""
+msgstr ""
+"Language: pt_BR\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n > 1);\n"
+
+# Sidebar
+msgid "Pair"
+msgstr "Parear"
+
+msgid "Controllers"
+msgstr "Controles"
+
+msgid "Bluetooth ready"
+msgstr "Bluetooth pronto"
+
+msgid "No Bluetooth"
+msgstr "Sem Bluetooth"
+
+msgid "Plug in the adapter and turn Bluetooth on."
+msgstr "Conecte o adaptador e ligue o Bluetooth."
+
+msgid "No controllers on this PC yet"
+msgstr "Nenhum controle neste PC ainda"
+
+msgid "1 controller on this PC"
+msgstr "1 controle neste PC"
+
+msgid "{} controllers on this PC"
+msgstr "{} controles neste PC"
+
+msgid "Version {}"
+msgstr "Versão {}"
+
+# Update banner
+msgid "DS Buddy {} is available"
+msgstr "DS Buddy {} disponível"
+
+msgid "Finish pairing first, then update."
+msgstr "Termine o pareamento para atualizar."
+
+msgid "You have version {}. The app will close, download the new version from GitHub and open again."
+msgstr "Você está na versão {}. O app fecha, a nova versão é baixada do GitHub e ele abre de novo."
+
+msgid "Not now"
+msgstr "Agora não"
+
+# Installs the new version; not the Refresh button on the Controllers page.
+msgid "Update"
+msgstr "Atualizar"
+
+# Pair page
+msgid "BLUETOOTH"
+msgstr "BLUETOOTH"
+
+msgid "Pair a controller"
+msgstr "Parear controle"
+
+msgid "Search and pair"
+msgstr "Procurar e parear"
+
+msgid "Search again"
+msgstr "Procurar de novo"
+
+msgid "Canceling…"
+msgstr "Cancelando…"
+
+msgid "Cancel"
+msgstr "Cancelar"
+
+msgid "How to enter pairing mode"
+msgstr "Como colocar em modo de pareamento"
+
+msgid "With the controller off, hold Create (DualSense) or Share (DualShock 4) together with the PS button."
+msgstr "Com o controle desligado, segure Create (DualSense) ou Share (DualShock 4) junto com o botão PS."
+
+msgid "Let go when the light flashes quickly, twice in a row, over and over. A slow pulse means it's in the wrong mode."
+msgstr "Solte quando a luz piscar rápido, duas vezes seguidas, várias vezes. Se ela pulsar devagar, não é o modo certo."
+
+msgid "Click Search and pair. If Windows asks you to confirm, allow it."
+msgstr "Clique em Procurar e parear. Se o Windows pedir confirmação, aceite."
+
+msgid "Pairing mode turns itself off after a minute or two. If the light stops, hold PS for 10 seconds to turn the controller off and start over."
+msgstr "O modo de pareamento desliga sozinho depois de um ou dois minutos. Se a luz parar, segure PS por 10 segundos para desligar e repita."
+
+msgid "Activity"
+msgstr "Atividade"
+
+# Controllers page
+msgid "DEVICES"
+msgstr "DISPOSITIVOS"
+
+# Re-reads the controller list; not the Update button in the update banner.
+msgid "Refresh"
+msgstr "Atualizar"
+
+msgid "PlayStation controllers on this PC"
+msgstr "Controles PlayStation neste PC"
+
+msgid "To connect a paired controller, just press its PS button. If it no longer connects, for example after you used it on a PS5, put it in pairing mode and click Re-pair."
+msgstr "Para conectar um controle pareado, é só apertar o botão PS. Se ele não conecta mais, por exemplo depois de usar no PS5, coloque-o em modo de pareamento e clique em Reparear."
+
+msgid "No controllers paired yet."
+msgstr "Nenhum controle pareado ainda."
+
+msgid "Connected"
+msgstr "Conectado"
+
+msgid "Paired"
+msgstr "Pareado"
+
+msgid "Incomplete"
+msgstr "Incompleto"
+
+msgid "Re-pair"
+msgstr "Reparear"
+
+msgid "Confirm"
+msgstr "Confirmar"
+
+msgid "Forget"
+msgstr "Esquecer"

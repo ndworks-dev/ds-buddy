@@ -3,6 +3,8 @@
 //! A native Slint window, software-rendered so it needs no GPU driver.
 #![windows_subsystem = "windows"]
 
+#[macro_use]
+mod i18n;
 mod bt;
 mod pairing;
 mod update;
@@ -32,6 +34,7 @@ const REFRESH_EVERY: Duration = Duration::from_secs(3);
 
 fn main() -> Result<(), slint::PlatformError> {
     let ui = AppWindow::new()?;
+    i18n::apply_override();
     ui.set_version(env!("CARGO_PKG_VERSION").into());
     ui.set_log(ModelRc::from(log_model()));
     // Development aid for screenshots: open on a page (0 Pair, 1 Controllers).
@@ -66,7 +69,13 @@ fn main() -> Result<(), slint::PlatformError> {
             if let Some(ui) = weak.upgrade() {
                 ui.set_cancelling(true);
                 // Scans and pairing attempts can't be interrupted midway.
-                ui.set_detail("Terminando a etapa atual, isso pode levar alguns segundos…".into());
+                ui.set_detail(
+                    tr!(
+                        "Finishing the current step. This can take a few seconds…",
+                        "Terminando a etapa atual, isso pode levar alguns segundos…"
+                    )
+                    .into(),
+                );
             }
         });
     }
@@ -75,9 +84,9 @@ fn main() -> Result<(), slint::PlatformError> {
         ui.on_forget(move |address| {
             let message =
                 match address.parse::<bt::Address>().map_err(|e| e.to_string()).and_then(|a| bt::remove(a).map_err(|e| e.to_string())) {
-                    Ok(true) => format!("{address} esquecido"),
-                    Ok(false) => format!("O Windows já não conhecia {address}"),
-                    Err(e) => format!("Não deu para esquecer: {e}"),
+                    Ok(true) => tr!("Forgot {address}", "{address} esquecido"),
+                    Ok(false) => tr!("Windows had already forgotten {address}", "O Windows já não conhecia {address}"),
+                    Err(e) => tr!("Couldn't forget the controller: {e}", "Não deu para esquecer: {e}"),
                 };
             toast(&weak, message);
             if let Some(ui) = weak.upgrade() {
@@ -104,7 +113,7 @@ fn main() -> Result<(), slint::PlatformError> {
                 Ok(()) => {
                     let _ = slint::quit_event_loop();
                 }
-                Err(e) => toast(&weak, format!("Não deu para iniciar a atualização: {e}")),
+                Err(e) => toast(&weak, tr!("Couldn't start the update: {e}", "Não deu para iniciar a atualização: {e}")),
             }
         });
     }
@@ -167,12 +176,18 @@ fn check_for_update(ui: &AppWindow) {
 fn start(weak: &Weak<AppWindow>, cancel: &Arc<AtomicBool>, opts: Options) {
     let Some(ui) = weak.upgrade() else { return };
     if ui.get_busy() {
-        toast(weak, "Já tem um pareamento em andamento".into());
+        toast(weak, tr!("A pairing is already in progress", "Já tem um pareamento em andamento"));
         return;
     }
     if !bt::radio_available() {
         ui.set_adapter_ok(false);
-        show_stage(&ui, Some(&Stage::Failed("Nenhum adaptador Bluetooth encontrado. Conecte o dongle e ligue o Bluetooth.".into())));
+        show_stage(
+            &ui,
+            Some(&Stage::Failed(tr!(
+                "No Bluetooth adapter found. Plug in the dongle and turn Bluetooth on.",
+                "Nenhum adaptador Bluetooth encontrado. Conecte o dongle e ligue o Bluetooth."
+            ))),
+        );
         return;
     }
 
@@ -223,23 +238,45 @@ fn apply(ui: &AppWindow, event: Event) {
 /// Fills the headline card. `None` is the idle state before the first run.
 fn show_stage(ui: &AppWindow, stage: Option<&Stage>) {
     let (phase, headline, detail): (i32, String, String) = match stage {
-        None => (0, "Pronto para parear".into(), "Coloque o controle em modo de pareamento e clique em Procurar e parear.".into()),
-        Some(Stage::Searching { round }) => {
-            (1, "Procurando controles…".into(), format!("Rodada {round}. Deixe o controle piscando perto do adaptador Bluetooth."))
-        }
-        Some(Stage::Pairing { name, attempt, .. }) => {
-            (2, format!("Pareando com {name}"), format!("Tentativa {attempt}. Se o Windows pedir confirmação, aceite."))
-        }
-        Some(Stage::Paired { name, .. }) => {
-            (3, format!("{name} pareado!"), "Daqui pra frente, é só apertar o botão PS para conectar.".into())
-        }
+        None => (
+            0,
+            tr!("Ready to pair", "Pronto para parear"),
+            tr!(
+                "Put the controller in pairing mode and click Search and pair.",
+                "Coloque o controle em modo de pareamento e clique em Procurar e parear."
+            ),
+        ),
+        Some(Stage::Searching { round }) => (
+            1,
+            tr!("Searching for controllers…", "Procurando controles…"),
+            tr!(
+                "Scan {round}. Keep the controller flashing near the Bluetooth adapter.",
+                "Rodada {round}. Deixe o controle piscando perto do adaptador Bluetooth."
+            ),
+        ),
+        Some(Stage::Pairing { name, attempt, .. }) => (
+            2,
+            tr!("Pairing with {name}", "Pareando com {name}"),
+            tr!(
+                "Attempt {attempt}. If Windows asks you to confirm, allow it.",
+                "Tentativa {attempt}. Se o Windows pedir confirmação, aceite."
+            ),
+        ),
+        Some(Stage::Paired { name, .. }) => (
+            3,
+            tr!("{name} is paired!", "{name} pareado!"),
+            tr!("From now on, just press the PS button to connect.", "Daqui pra frente, é só apertar o botão PS para conectar."),
+        ),
         Some(Stage::TimedOut) => (
             4,
-            "Tempo esgotado".into(),
-            "O controle não foi encontrado ou não aceitou o pareamento em 10 minutos. Confira se a luz ainda pisca e tente de novo.".into(),
+            tr!("Time's up", "Tempo esgotado"),
+            tr!(
+                "The controller wasn't found or didn't accept pairing within 10 minutes. Check that its light is still flashing and try again.",
+                "O controle não foi encontrado ou não aceitou o pareamento em 10 minutos. Confira se a luz ainda pisca e tente de novo."
+            ),
         ),
-        Some(Stage::Cancelled) => (5, "Cancelado".into(), "A busca foi interrompida.".into()),
-        Some(Stage::Failed(e)) => (6, "Algo deu errado".into(), e.clone()),
+        Some(Stage::Cancelled) => (5, tr!("Canceled", "Cancelado"), tr!("The search was stopped.", "A busca foi interrompida.")),
+        Some(Stage::Failed(e)) => (6, tr!("Something went wrong", "Algo deu errado"), e.clone()),
     };
     // Keep the "Cancelando…" note on screen until the flow actually stops.
     if ui.get_cancelling() && matches!(stage, Some(Stage::Searching { .. } | Stage::Pairing { .. })) {

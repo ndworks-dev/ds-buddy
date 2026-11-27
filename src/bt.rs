@@ -10,6 +10,8 @@ use windows_sys::Win32::Devices::Bluetooth::{
 use windows_sys::Win32::Foundation::{CloseHandle, ERROR_NO_MORE_ITEMS, GetLastError, HANDLE};
 use windows_sys::core::GUID;
 
+use crate::i18n;
+
 /// Bluetooth HID service (0x1124), used by DualShock 4 and DualSense.
 const HID_SERVICE: GUID = GUID::from_u128(0x00001124_0000_1000_8000_00805f9b34fb);
 
@@ -29,10 +31,12 @@ impl FromStr for Address {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let hex: String = s.chars().filter(|c| !matches!(c, ':' | '-' | ' ')).collect();
+        let invalid =
+            || tr!("invalid address: '{s}' (use the form D0:BC:C1:9E:1D:4A)", "endereço inválido: '{s}' (use o formato D0:BC:C1:9E:1D:4A)");
         if hex.len() != 12 {
-            return Err(format!("endereço inválido: '{s}' (use o formato D0:BC:C1:9E:1D:4A)"));
+            return Err(invalid());
         }
-        u64::from_str_radix(&hex, 16).map(Address).map_err(|_| format!("endereço inválido: '{s}' (use o formato D0:BC:C1:9E:1D:4A)"))
+        u64::from_str_radix(&hex, 16).map(Address).map_err(|_| invalid())
     }
 }
 
@@ -78,7 +82,7 @@ impl Device {
     }
 
     pub fn display_name(&self) -> &str {
-        if self.name.is_empty() { "(sem nome)" } else { &self.name }
+        if self.name.is_empty() { i18n::pick("(unnamed)", "(sem nome)") } else { &self.name }
     }
 }
 
@@ -99,17 +103,28 @@ pub struct Error(pub u32);
 
 impl fmt::Display for Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let os;
         let hint = match self.0 {
-            31 => "a conexão com o controle não completou",
-            121 | 258 | 1460 => "o controle não respondeu a tempo",
-            1167 => "o controle não está ao alcance ou saiu do modo de pareamento",
-            1168 => "dispositivo não encontrado",
-            1223 => "o pareamento foi cancelado ou a confirmação do Windows foi recusada",
-            1244 => "a autenticação falhou",
-            _ => "",
+            31 => i18n::pick("the connection to the controller didn't complete", "a conexão com o controle não completou"),
+            121 | 258 | 1460 => i18n::pick("the controller didn't respond in time", "o controle não respondeu a tempo"),
+            1167 => i18n::pick(
+                "the controller is out of range or left pairing mode",
+                "o controle não está ao alcance ou saiu do modo de pareamento",
+            ),
+            1168 => i18n::pick("device not found", "dispositivo não encontrado"),
+            1223 => i18n::pick(
+                "pairing was canceled, or the Windows confirmation was declined",
+                "o pareamento foi cancelado ou a confirmação do Windows foi recusada",
+            ),
+            1244 => i18n::pick("authentication failed", "a autenticação falhou"),
+            // Windows already words its own message in the system language.
+            _ => {
+                os = std::io::Error::from_raw_os_error(self.0 as i32).to_string();
+                &os
+            }
         };
-        let os = std::io::Error::from_raw_os_error(self.0 as i32).to_string();
-        if hint.is_empty() { write!(f, "código {}: {os}", self.0) } else { write!(f, "código {}: {hint}", self.0) }
+        let code = self.0;
+        f.write_str(&tr!("code {code}: {hint}", "código {code}: {hint}"))
     }
 }
 

@@ -2,7 +2,13 @@ use std::{env, fs, path::PathBuf};
 
 fn main() {
     // fluent-dark styles the stock scroll bar to sit on the app's dark theme.
-    let config = slint_build::CompilerConfiguration::new().with_style("fluent-dark".into());
+    // Translations are compiled into the executable, and Slint picks one from
+    // the system locale. The .po entries carry no context, so a msgid is the
+    // English text alone.
+    let config = slint_build::CompilerConfiguration::new()
+        .with_style("fluent-dark".into())
+        .with_bundled_translations("ui/translations")
+        .with_default_translation_context(slint_build::DefaultTranslationContext::None);
     slint_build::compile_with_config("ui/app.slint", config).expect("compile UI");
     embed_resources();
 }

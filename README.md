@@ -25,7 +25,8 @@ Windows, ou aparece e falha na primeira tentativa. O DS Buddy usa a API clássic
 de Bluetooth do Windows e insiste até parear. O "DS" vale para os dois:
 **D**ual**S**hock e **D**ual**S**ense.
 
-**Alfa.** Windows 10 ou 11, x64. Não precisa de administrador.
+**Alfa.** Windows 10 ou 11, x64. Não precisa de administrador. O app aparece em
+português quando o Windows está em português e em inglês nos demais idiomas.
 
 ## Instalar
 
@@ -113,7 +114,17 @@ cargo build --release   # target\release\ds-buddy.exe
 A interface usa renderização por software, então não precisa de GPU nem de
 WebView2. O ícone vem de `ui\icon.svg`: `scripts\make-icon.mjs` gera o
 `ui\icon.png` e o `icon.ico` a partir dele (veja o começo do script). Para tirar
-capturas de tela, `DS_BUDDY_PAGE=1` abre o app direto na aba Controles.
+capturas de tela, `DS_BUDDY_PAGE=1` abre o app direto na aba Controles, e
+`DS_BUDDY_LANG=en` ou `DS_BUDDY_LANG=pt-BR` força um idioma.
+
+## Tradução
+
+O texto original da interface é em inglês. O português fica em
+`ui/translations/pt-BR/LC_MESSAGES/ds-buddy.po`, embutido no executável na
+compilação, e o Slint escolhe o idioma pelo locale do sistema. As mensagens
+montadas no Rust (status, atividade, erros) usam a macro `tr!` de `src/i18n.rs`,
+que decide do mesmo jeito. Todo `@tr` novo precisa de uma entrada no `.po`: o
+`cargo test` falha se faltar alguma.
 
 ## Arquitetura
 
@@ -122,9 +133,11 @@ src/main.rs      ponto de entrada e ligação com a interface
 src/bt.rs        chamadas à API de Bluetooth do Windows
 src/pairing.rs   o fluxo de busca e pareamento, numa thread separada
 src/update.rs    a checagem de atualização e a chamada ao instalador
+src/i18n.rs      o idioma do app e a macro tr! para os textos do Rust
 ui/app.slint     a interface
 ui/widgets.slint componentes da interface
 ui/icon.svg      o ícone, de onde saem o icon.png e o icon.ico
+ui/translations/ as traduções da interface (.po)
 scripts/         ícone, versão das releases e o script de instalação
 ```
 

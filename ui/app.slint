@@ -197,8 +197,8 @@ export component AppWindow inherits Window {
                 }
                 VerticalLayout {
                     spacing: 4px;
-                    NavItem { label: "Parear"; icon: "pair"; active: root.page == 0; clicked => { root.page = 0; } }
-                    NavItem { label: "Controles"; icon: "controllers"; active: root.page == 1; clicked => { root.page = 1; root.refresh(); } }
+                    NavItem { label: @tr("Pair"); icon: "pair"; active: root.page == 0; clicked => { root.page = 0; } }
+                    NavItem { label: @tr("Controllers"); icon: "controllers"; active: root.page == 1; clicked => { root.page = 1; root.refresh(); } }
                 }
                 Rectangle { vertical-stretch: 1; }
                 Rectangle {
@@ -216,15 +216,16 @@ export component AppWindow inherits Window {
                                 alignment: center;
                                 Rectangle { width: 8px; height: 8px; border-radius: 4px; background: root.adapter-ok ? Theme.accent : Theme.warn; }
                             }
-                            Text { text: root.adapter-ok ? "Bluetooth pronto" : "Sem Bluetooth"; color: Theme.text; font-weight: 500; }
+                            Text { text: root.adapter-ok ? @tr("Bluetooth ready") : @tr("No Bluetooth"); color: Theme.text; font-weight: 500; }
                         }
                         Label {
-                            text: !root.adapter-ok ? "Conecte o adaptador e ligue o Bluetooth."
-                                : root.controllers.length == 1 ? "1 controle neste PC"
-                                : root.controllers.length + " controles neste PC";
+                            text: !root.adapter-ok ? @tr("Plug in the adapter and turn Bluetooth on.")
+                                : root.controllers.length == 0 ? @tr("No controllers on this PC yet")
+                                : root.controllers.length == 1 ? @tr("1 controller on this PC")
+                                : @tr("{} controllers on this PC", root.controllers.length);
                             wrap: word-wrap;
                         }
-                        if root.version != "": Label { text: "Versão " + root.version; }
+                        if root.version != "": Label { text: @tr("Version {}", root.version); }
                     }
                 }
             }
@@ -256,10 +257,10 @@ export component AppWindow inherits Window {
                                 alignment: center;
                                 spacing: 4px;
                                 horizontal-stretch: 1;
-                                Text { text: "DS Buddy " + root.update-version + " disponível"; color: Theme.text; font-weight: 600; }
+                                Text { text: @tr("DS Buddy {} is available", root.update-version); color: Theme.text; font-weight: 600; }
                                 Text {
-                                    text: root.busy ? "Termine o pareamento para atualizar."
-                                        : "Você está na versão " + root.version + ". O app fecha, a nova versão é baixada do GitHub e ele abre de novo.";
+                                    text: root.busy ? @tr("Finish pairing first, then update.")
+                                        : @tr("You have version {}. The app will close, download the new version from GitHub and open again.", root.version);
                                     color: Theme.text2;
                                     font-size: 13px;
                                     wrap: word-wrap;
@@ -267,11 +268,11 @@ export component AppWindow inherits Window {
                             }
                             VerticalLayout {
                                 alignment: center;
-                                Button { text: "Agora não"; height-hint: 36px; clicked => { root.dismiss-update(); } }
+                                Button { text: @tr("Not now"); height-hint: 36px; clicked => { root.dismiss-update(); } }
                             }
                             if !root.busy: VerticalLayout {
                                 alignment: center;
-                                Button { text: "Atualizar"; primary: true; height-hint: 36px; clicked => { root.install-update(); } }
+                                Button { text: @tr("Update"); primary: true; height-hint: 36px; clicked => { root.install-update(); } }
                             }
                         }
                     }
@@ -279,7 +280,7 @@ export component AppWindow inherits Window {
                     // ======================================================= Pair
                     if root.page == 0: VerticalLayout {
                         spacing: 22px;
-                        PageHeader { eyebrow: "BLUETOOTH"; title: "Parear controle"; }
+                        PageHeader { eyebrow: @tr("BLUETOOTH"); title: @tr("Pair a controller"); }
 
                         Card {
                             HorizontalLayout {
@@ -300,12 +301,12 @@ export component AppWindow inherits Window {
                                         alignment: start;
                                         spacing: 10px;
                                         if !root.busy: Button {
-                                            text: root.phase == 0 ? "Procurar e parear" : "Procurar de novo";
+                                            text: root.phase == 0 ? @tr("Search and pair") : @tr("Search again");
                                             primary: true;
                                             clicked => { root.start-pairing(); }
                                         }
                                         if root.busy: Button {
-                                            text: root.cancelling ? "Cancelando…" : "Cancelar";
+                                            text: root.cancelling ? @tr("Canceling…") : @tr("Cancel");
                                             clicked => { if (!root.cancelling) { root.cancel(); } }
                                         }
                                     }
@@ -317,12 +318,12 @@ export component AppWindow inherits Window {
                             VerticalLayout {
                                 padding: 20px;
                                 spacing: 14px;
-                                Heading { text: "Como colocar em modo de pareamento"; }
-                                Step { number: "1"; text: "Com o controle desligado, segure Create (DualSense) ou Share (DualShock 4) junto com o botão PS."; }
-                                Step { number: "2"; text: "Solte quando a luz piscar rápido, duas vezes seguidas, várias vezes. Se ela pulsar devagar, não é o modo certo."; }
-                                Step { number: "3"; text: "Clique em Procurar e parear. Se o Windows pedir confirmação, aceite."; }
+                                Heading { text: @tr("How to enter pairing mode"); }
+                                Step { number: "1"; text: @tr("With the controller off, hold Create (DualSense) or Share (DualShock 4) together with the PS button."); }
+                                Step { number: "2"; text: @tr("Let go when the light flashes quickly, twice in a row, over and over. A slow pulse means it's in the wrong mode."); }
+                                Step { number: "3"; text: @tr("Click Search and pair. If Windows asks you to confirm, allow it."); }
                                 Label {
-                                    text: "O modo de pareamento desliga sozinho depois de um ou dois minutos. Se a luz parar, segure PS por 10 segundos para desligar e repita.";
+                                    text: @tr("Pairing mode turns itself off after a minute or two. If the light stops, hold PS for 10 seconds to turn the controller off and start over.");
                                     wrap: word-wrap;
                                 }
                             }
@@ -332,7 +333,7 @@ export component AppWindow inherits Window {
                             VerticalLayout {
                                 padding: 20px;
                                 spacing: 12px;
-                                Heading { text: "Atividade"; }
+                                Heading { text: @tr("Activity"); }
                                 Rectangle {
                                     border-radius: 10px;
                                     background: Theme.well;
@@ -363,20 +364,20 @@ export component AppWindow inherits Window {
                         spacing: 22px;
                         HorizontalLayout {
                             spacing: 16px;
-                            PageHeader { eyebrow: "DISPOSITIVOS"; title: "Controles"; }
+                            PageHeader { eyebrow: @tr("DEVICES"); title: @tr("Controllers"); }
                             Rectangle { horizontal-stretch: 1; }
                             VerticalLayout {
                                 alignment: end;
-                                Button { text: "Atualizar"; height-hint: 36px; clicked => { root.refresh(); } }
+                                Button { text: @tr("Refresh"); height-hint: 36px; clicked => { root.refresh(); } }
                             }
                         }
                         Card {
                             VerticalLayout {
                                 padding: 20px;
                                 spacing: 6px;
-                                Heading { text: "Controles PlayStation neste PC"; }
+                                Heading { text: @tr("PlayStation controllers on this PC"); }
                                 Text {
-                                    text: "Para conectar um controle pareado, é só apertar o botão PS. Se ele não conecta mais, por exemplo depois de usar no PS5, coloque-o em modo de pareamento e clique em Reparear.";
+                                    text: @tr("To connect a paired controller, just press its PS button. If it no longer connects, for example after you used it on a PS5, put it in pairing mode and click Re-pair.");
                                     color: Theme.muted;
                                     font-size: 13px;
                                     wrap: word-wrap;
@@ -386,7 +387,7 @@ export component AppWindow inherits Window {
                                     min-height: 64px;
                                     Rectangle { y: 0; height: 1px; background: #1F2329; }
                                     HorizontalLayout {
-                                        Text { text: "Nenhum controle pareado ainda."; color: Theme.text2; vertical-alignment: center; }
+                                        Text { text: @tr("No controllers paired yet."); color: Theme.text2; vertical-alignment: center; }
                                     }
                                 }
                                 for c in root.controllers: Rectangle {
@@ -404,7 +405,7 @@ export component AppWindow inherits Window {
                                         VerticalLayout {
                                             alignment: center;
                                             Pill {
-                                                text: c.connected ? "Conectado" : c.paired ? "Pareado" : "Incompleto";
+                                                text: c.connected ? @tr("Connected") : c.paired ? @tr("Paired") : @tr("Incomplete");
                                                 tint: c.connected ? Theme.accent : c.paired ? Theme.text2 : Theme.warn;
                                                 filled: c.connected;
                                             }
@@ -413,7 +414,7 @@ export component AppWindow inherits Window {
                                             alignment: center;
                                             Button {
                                                 width: 120px;
-                                                text: "Reparear";
+                                                text: @tr("Re-pair");
                                                 height-hint: 36px;
                                                 clicked => { root.confirm-forget = ""; root.page = 0; root.repair(c.address); }
                                             }
@@ -422,7 +423,7 @@ export component AppWindow inherits Window {
                                             alignment: center;
                                             Button {
                                                 width: 120px;
-                                                text: root.confirm-forget == c.address ? "Confirmar" : "Esquecer";
+                                                text: root.confirm-forget == c.address ? @tr("Confirm") : @tr("Forget");
                                                 danger: true;
                                                 height-hint: 36px;
                                                 clicked => {

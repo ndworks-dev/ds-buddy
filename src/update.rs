@@ -58,10 +58,11 @@ fn install_command(version: &str, dir: &str, shortcut: bool) -> String {
     format!(
         "[Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor [Net.SecurityProtocolType]::Tls12; \
          try {{ & ([scriptblock]::Create((irm {}))) -Version {} -InstallDir {}{no_shortcut} }} \
-         catch {{ Write-Host $_ -ForegroundColor Red; Read-Host 'Pressione Enter para fechar' }}",
+         catch {{ Write-Host $_ -ForegroundColor Red; Read-Host {} }}",
         ps_quote(&url),
         ps_quote(version),
         ps_quote(dir),
+        ps_quote(crate::i18n::pick("Press Enter to close", "Pressione Enter para fechar")),
     )
 }
 

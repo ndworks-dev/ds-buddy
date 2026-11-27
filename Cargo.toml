@@ -10,6 +10,8 @@ description = "Finds and pairs DualShock 4 / DualSense controllers over Bluetoot
 slint = { version = "1.18", default-features = false, features = ["std", "backend-winit", "renderer-software", "accessibility", "compat-1-2"] }
 windows-sys = { version = "0.61.2", features = ["Win32_Foundation", "Win32_Devices_Bluetooth", "Win32_Networking_WinHttp", "Win32_System_SystemInformation"] }
 
+sys-locale = "0.3"
+
 [build-dependencies]
 slint-build = "1.18"
 embed-resource = "3"
