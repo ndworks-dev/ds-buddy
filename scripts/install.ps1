@@ -29,6 +29,9 @@ param(
     [string]$Repo = '__REPO__',
     # Install this local package instead of downloading a release.
     [string]$PackagePath,
+    # Leave the Start menu alone. The app's own updater passes it for a copy
+    # run from the zip, which never had a shortcut.
+    [switch]$NoShortcut,
     [string]$InstallDir = (Join-Path $env:LOCALAPPDATA 'Programs\DS Buddy')
 )
 
@@ -106,12 +109,14 @@ try {
     Copy-Item (Join-Path $files '*') $InstallDir -Recurse -Force
     $exe = Join-Path $InstallDir $exeName
 
-    $shell = New-Object -ComObject WScript.Shell
-    $link = $shell.CreateShortcut($shortcut)
-    $link.TargetPath = $exe
-    $link.WorkingDirectory = $InstallDir
-    $link.Description = 'Finds and pairs DualShock 4 and DualSense controllers over Bluetooth'
-    $link.Save()
+    if (-not $NoShortcut) {
+        $shell = New-Object -ComObject WScript.Shell
+        $link = $shell.CreateShortcut($shortcut)
+        $link.TargetPath = $exe
+        $link.WorkingDirectory = $InstallDir
+        $link.Description = 'Finds and pairs DualShock 4 and DualSense controllers over Bluetooth'
+        $link.Save()
+    }
 
     if (Test-Elevated) {
         # The app needs no privileges and must not inherit these. Explorer opens
@@ -121,7 +126,7 @@ try {
     } else {
         Start-Process $exe
     }
-    Write-Step 'DS Buddy is installed and running. It is also in the Start menu.'
+    Write-Step $(if ($NoShortcut) { 'DS Buddy is installed and running.' } else { 'DS Buddy is installed and running. It is also in the Start menu.' })
 }
 finally {
     Remove-Item $work -Recurse -Force -ErrorAction SilentlyContinue
