@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256">
+  <defs>
+    <linearGradient id="lb" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#4DA3FF"/>
+      <stop offset="1" stop-color="#5EE6A8"/>
+    </linearGradient>
+    <filter id="glow" x="-100%" y="-50%" width="300%" height="200%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+  </defs>
+  <rect x="8" y="8" width="240" height="240" rx="56" fill="#16191E" stroke="#2C313A" stroke-width="4"/>
+  <rect x="48" y="86" width="12" height="84" rx="6" fill="url(#lb)" filter="url(#glow)" opacity="0.8"/>
+  <rect x="196" y="86" width="12" height="84" rx="6" fill="url(#lb)" filter="url(#glow)" opacity="0.8"/>
+  <rect x="72" y="86" width="112" height="84" rx="16" fill="#E8EAED"/>
+  <rect x="48" y="86" width="12" height="84" rx="6" fill="url(#lb)"/>
+  <rect x="196" y="86" width="12" height="84" rx="6" fill="url(#lb)"/>
+  <g fill="none" stroke="#16191E" stroke-width="8" stroke-linecap="round">
+    <path d="M117.39 135.39 A15 15 0 0 1 138.61 135.39"/>
+    <path d="M106.79 124.79 A30 30 0 0 1 149.21 124.79"/>
+  </g>
+  <circle cx="128" cy="146" r="5.5" fill="#16191E"/>
+</svg>

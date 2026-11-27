@@ -101,7 +101,8 @@ cargo build --release   # target\release\ds-buddy.exe
 ```
 
 A interface usa renderização por software, então não precisa de GPU nem de
-WebView2. `scripts\make-icon.ps1` gera `ui\icon.png` e `icon.ico`. Para tirar
+WebView2. O ícone vem de `ui\icon.svg`: `scripts\make-icon.mjs` gera o
+`ui\icon.png` e o `icon.ico` a partir dele (veja o começo do script). Para tirar
 capturas de tela, `DS_BUDDY_PAGE=1` abre o app direto na aba Controles.
 
 ## Arquitetura
@@ -112,6 +113,7 @@ src/bt.rs        chamadas à API de Bluetooth do Windows
 src/pairing.rs   o fluxo de busca e pareamento, numa thread separada
 ui/app.slint     a interface
 ui/widgets.slint componentes da interface
+ui/icon.svg      o ícone, de onde saem o icon.png e o icon.ico
 scripts/         ícone, versão das releases e o script de instalação
 ```
 
