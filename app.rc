@@ -1,10 +1,13 @@
-1 ICON "icon.ico"
+// Template: build.rs fills in @ICON@ and the version placeholders from
+// Cargo.toml, so the release version CI stamps there reaches the .exe.
+
+1 ICON "@ICON@"
 
 // Task Manager and the taskbar show FileDescription; without it they fall
 // back to the file name, "ds-buddy.exe".
 1 VERSIONINFO
-FILEVERSION 0,1,0,0
-PRODUCTVERSION 0,1,0,0
+FILEVERSION @VERSION_COMMAS@
+PRODUCTVERSION @VERSION_COMMAS@
 BEGIN
     BLOCK "StringFileInfo"
     BEGIN
@@ -12,8 +15,8 @@ BEGIN
         BEGIN
             VALUE "FileDescription", "DS Buddy"
             VALUE "ProductName", "DS Buddy"
-            VALUE "FileVersion", "0.1.0"
-            VALUE "ProductVersion", "0.1.0"
+            VALUE "FileVersion", "@VERSION@"
+            VALUE "ProductVersion", "@VERSION@"
             VALUE "OriginalFilename", "ds-buddy.exe"
         END
     END
