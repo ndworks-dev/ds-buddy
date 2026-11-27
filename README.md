@@ -1,10 +1,10 @@
-# ds-buddy
+# DS Buddy
 
-App para Windows que encontra e pareia controles **DualShock 4** e **DualSense** por Bluetooth, mesmo com dongles teimosos (como os clones CSR8510, `VID_0A12&PID_0001`).
+App para Windows que encontra e pareia controles **DualShock 4** e **DualSense** por Bluetooth, mesmo com dongles teimosos (como os clones CSR8510, `VID_0A12&PID_0001`). O "DS" vale para os dois: **D**ual**S**hock e **D**ual**S**ense.
 
 ## Por que existe
 
-Com alguns adaptadores, o controle em modo de pareamento nunca aparece na tela **Adicionar dispositivo** do Windows, ou aparece e falha na primeira tentativa. A tela de Configurações desiste rápido. O `ds-buddy` usa a API clássica de Bluetooth do Windows e insiste:
+Com alguns adaptadores, o controle em modo de pareamento nunca aparece na tela **Adicionar dispositivo** do Windows, ou aparece e falha na primeira tentativa. A tela de Configurações desiste rápido. O DS Buddy usa a API clássica de Bluetooth do Windows e insiste:
 
 1. Faz buscas seguidas (~8 s cada) até achar um controle PlayStation, pelo nome ou pela classe de dispositivo "gamepad".
 2. Chama o controle direto pelo endereço (`BluetoothAuthenticateDeviceEx`), sem depender da lista do Windows.
