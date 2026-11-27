@@ -8,7 +8,7 @@
 
 [![Build](https://github.com/ndworks-dev/ds-buddy/actions/workflows/release.yml/badge.svg)](https://github.com/ndworks-dev/ds-buddy/actions/workflows/release.yml)
 ![Plataforma](https://img.shields.io/badge/plataforma-Windows%20x64-0078d4)
-![Status](https://img.shields.io/badge/status-alfa-orange)
+![Status](https://img.shields.io/badge/status-est%C3%A1vel-brightgreen)
 [![Licença](https://img.shields.io/badge/licen%C3%A7a-GPL--3.0-blue)](LICENSE)
 
 **Encontra e pareia controles DualShock 4 e DualSense por Bluetooth. Feito em
@@ -25,7 +25,7 @@ Windows, ou aparece e falha na primeira tentativa. O DS Buddy usa a API clássic
 de Bluetooth do Windows e insiste até parear. O "DS" vale para os dois:
 **D**ual**S**hock e **D**ual**S**ense.
 
-**Alfa.** Windows 10 ou 11, x64. Não precisa de administrador. O app aparece em
+**Estável.** Windows 10 ou 11, x64. Não precisa de administrador. O app aparece em
 português quando o Windows está em português e em inglês nos demais idiomas; dá
 para fixar um dos dois em **Configurações**.
 
